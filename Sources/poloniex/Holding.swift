@@ -17,7 +17,7 @@ struct Holding: CustomStringConvertible {
       return availableAmount + onOrders
   }
   var description: String {
-      let o = orders.map({$0.description}).joined()
+      let o = orders.map({$0.description}).joined(separator: ", ")
       return "\(ticker): \(bitcoinValue.summary) BTC \(o)"
   }
 
