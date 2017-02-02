@@ -10,6 +10,14 @@ func showAlert(message: String) {
     task.waitUntilExit()
 }
 
+func alertHoldingsWithoutOrders(_ holdings: [Holding]) {
+    holdings.forEach({ holding in
+        if holding.orders.isEmpty && !holding.isBitcoin {
+            showAlert(message: "No open orders for \(holding.ticker)")
+        }
+    })
+}
+
 let arguments = CommandLine.arguments
 
 if arguments.count != 2 {
@@ -22,6 +30,7 @@ let path = arguments[1]
 if let keys = KeyLoader.loadKeys(path) {
     let holdings = HoldingsLoader.loadHoldings(keys)
     let holdingsWithOrders = OrdersLoader.loadOrders(holdings, keys: keys)
+    alertHoldingsWithoutOrders(holdingsWithOrders)
     let btcPrice = QuotesLoader.loadBTCPrice()
     let portfolio = Portfolio(holdings: holdingsWithOrders, btcPrice: btcPrice)
     print(portfolio)
