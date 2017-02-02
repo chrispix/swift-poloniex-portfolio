@@ -21,6 +21,11 @@ struct Holding: CustomStringConvertible {
       return "\(ticker): \(bitcoinValue.summary) BTC \(o)"
   }
 
+  static func ticker(fromBitcoinMarketKey key: String) -> String? {
+      guard key.hasPrefix("BTC_") else { return nil }
+      return key.replacingOccurrences(of: "BTC_", with: "")
+  }
+
   init(ticker: String, bitcoinValue: Double, availableAmount: Double, onOrders: Double) {
       self.ticker = ticker
       self.bitcoinValue = bitcoinValue
@@ -61,8 +66,9 @@ struct Portfolio: CustomStringConvertible {
   var description: String {
       let sorted = holdings.sorted(by: { $0.ticker < $1.ticker })
       let all: [String] = sorted.map({$0.description})
+      let price = btcPrice != nil ? "BTC price: \(btcPrice!.dollars)\n" : ""
       let 💰 = btcPrice != nil ? (btcPrice! * total()).dollars : ""
-      return "\(all.joined(separator: "\n"))\nTotal: \(total().summary) BTC \(💰)"
+      return "\(price)\(all.joined(separator: "\n"))\nTotal: \(total().summary) BTC \(💰)"
   }
 }
 /*
