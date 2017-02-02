@@ -61,14 +61,23 @@ struct OrdersLoader {
   }
 
   private static func addOrder(_ order: Order, market: String, to holdings: [Holding]) -> [Holding] {
-      return holdings.map({ holding in
-          if holding.bitcoinMarketKey == market {
-              var holding = holding
-              holding.addOrder(order)
-              return holding
-          } else {
-              return holding
-          }
-      })
+      if holdings.filter({ $0.bitcoinMarketKey == market }).isEmpty, let ticker = Holding.ticker(fromBitcoinMarketKey: market) {
+          // we have no holding for this currency
+          var holding = Holding(ticker: ticker, bitcoinValue: 0, availableAmount: 0, onOrders: 0)
+          holding.addOrder(order)
+          var holdings = holdings
+          holdings.append(holding)
+          return holdings
+      } else {
+          return holdings.map({ holding in
+              if holding.bitcoinMarketKey == market {
+                  var holding = holding
+                  holding.addOrder(order)
+                  return holding
+              } else {
+                  return holding
+              }
+          })
+      }
   }
 }
