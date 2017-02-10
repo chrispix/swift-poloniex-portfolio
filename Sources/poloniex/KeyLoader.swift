@@ -1,13 +1,13 @@
 
 import Foundation
 
-struct APIKeys {
+public struct APIKeys {
     let key: String
     let secret: String
 }
 
-struct KeyLoader {
-    static func loadKeys(_ path: String) -> APIKeys? {
+public struct KeyLoader {
+    public static func loadKeys(_ path: String) -> APIKeys? {
         guard let data = FileManager.default.contents(atPath: path) else {
             print("Couldn't load keys JSON file")
             return nil

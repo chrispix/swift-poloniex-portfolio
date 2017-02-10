@@ -1,8 +1,8 @@
 
 import Foundation
 
-struct OrdersLoader {
-  static func loadOrders(_ holdings: [Holding], keys: APIKeys) -> [Holding] {
+public struct OrdersLoader {
+  public static func loadOrders(_ holdings: [Holding], keys: APIKeys) -> [Holding] {
     let session = URLSession(configuration: URLSessionConfiguration.default)
     let poloniexRequest = PoloniexRequest(params: ["command": "returnOpenOrders", "currencyPair": "all"], keys: keys)
     let request = poloniexRequest.urlRequest

@@ -1,8 +1,8 @@
 
 import Foundation
 
-struct HoldingsLoader {
-  static func loadHoldings(_ keys: APIKeys) -> [Holding] {
+public struct HoldingsLoader {
+  public static func loadHoldings(_ keys: APIKeys) -> [Holding] {
     let session = URLSession(configuration: URLSessionConfiguration.default)
     let poloniexRequest = PoloniexRequest(params: ["command": "returnCompleteBalances"], keys: keys)
     let request = poloniexRequest.urlRequest

@@ -1,8 +1,8 @@
 
 import Foundation
 
-struct QuotesLoader {
-  static func loadBTCPrice() -> Double? {
+public struct QuotesLoader {
+  public static func loadBTCPrice() -> Double? {
     let session = URLSession(configuration: URLSessionConfiguration.default)
     let url = URL(string: "https://poloniex.com/public?command=returnTicker")!
     let request = URLRequest(url: url)

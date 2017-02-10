@@ -1,22 +1,22 @@
 
 import Foundation
 
-struct Holding: CustomStringConvertible {
-  let ticker: String
+public struct Holding: CustomStringConvertible {
+  public let ticker: String
   let bitcoinValue: Double
   let availableAmount: Double
   let onOrders: Double
-  var orders = [Order]()
+  public var orders = [Order]()
   var bitcoinMarketKey: String {
       return "BTC_\(ticker)"
   }
-  var isBitcoin: Bool {
+  public var isBitcoin: Bool {
       return ticker == "BTC"
   }
   var amount: Double {
       return availableAmount + onOrders
   }
-  var description: String {
+  public var description: String {
       let o = orders.map({$0.description}).joined(separator: ", ")
       return "\(ticker): \(bitcoinValue.summary) BTC \(o)"
   }
@@ -43,19 +43,19 @@ enum BuySell: String {
     case sell
 }
 
-struct Order: CustomStringConvertible {
+public struct Order: CustomStringConvertible {
   let price: Double
   let amount: Double
   let type: BuySell
   var proceeds: Double {
       return price * amount
   }
-  var description: String {
+  public var description: String {
       return "\(type) \(amount.summary) for \(proceeds.summary) BTC"
   }
 }
 
-struct Portfolio: CustomStringConvertible {
+public struct Portfolio: CustomStringConvertible {
   let holdings: [Holding]
   let btcPrice: Double?
   private func total() -> Double {
@@ -63,7 +63,13 @@ struct Portfolio: CustomStringConvertible {
           return sum + holding.bitcoinValue
       })
   }
-  var description: String {
+  
+  public init(holdings: [Holding], btcPrice: Double?) {
+      self.holdings = holdings
+      self.btcPrice = btcPrice
+  }
+
+  public var description: String {
       let sorted = holdings.sorted(by: { $0.ticker < $1.ticker })
       let all: [String] = sorted.map({$0.description})
       let price = btcPrice != nil ? "BTC price: \(btcPrice!.dollars)\n" : ""
