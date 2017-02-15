@@ -20,6 +20,9 @@ public struct Holding: CustomStringConvertible {
       let o = orders.map({$0.summary(for: self)}).joined(separator: ", ")
       return "\(ticker): \(bitcoinValue.summary) BTC \(o)"
   }
+    var bitcoinPrice: Double {
+        return bitcoinValue / amount
+    }
 
   static func ticker(fromBitcoinMarketKey key: String) -> String? {
       guard key.hasPrefix("BTC_") else { return nil }
@@ -36,6 +39,10 @@ public struct Holding: CustomStringConvertible {
   mutating func addOrder(_ order: Order) {
       orders.append(order)
   }
+
+    func dollarValue(btcPrice: Double) -> String {
+        return (bitcoinValue * btcPrice).dollars
+    }
 }
 
 enum BuySell: String {
@@ -78,8 +85,7 @@ public struct Portfolio: CustomStringConvertible {
       let sorted = holdings.sorted(by: { $0.ticker < $1.ticker })
       let all: [String] = sorted.map({$0.description})
       let price = btcPrice != nil ? "BTC price: \(btcPrice!.dollars)\n" : ""
-      let 💰 = btcPrice != nil ? (btcPrice! * total()).dollars : ""
-      return "\(price)\(all.joined(separator: "\n"))\nTotal: \(total().summary) BTC \(💰)"
+      return "\(price)\(all.joined(separator: "\n"))\n\(summary)"
   }
 }
 /*
