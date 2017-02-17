@@ -1,6 +1,6 @@
 
 import Foundation
-import crypto
+//import crypto
 
 struct PoloniexRequest {
   let body: String
