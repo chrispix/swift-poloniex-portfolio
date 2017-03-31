@@ -9,4 +9,20 @@ extension Double {
     var summary: String {
         return String(format: "%.2f", self)
     }
+
+    var rounded: String {
+        return String(format: "%.0f", self)
+    }
+
+    var roundedPercent: String {
+        return String(format: "%.0f%%", self * 100)
+    }
+
+    var threeSignificant: String {
+        var temp = self
+        while temp <= 100 {
+            temp *= 10
+        }
+        return temp.rounded
+    }
 }
