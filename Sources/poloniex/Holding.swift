@@ -17,7 +17,7 @@ public struct Holding: CustomStringConvertible {
       return availableAmount + onOrders
   }
   public var description: String {
-      let o = orders.map({$0.description}).joined(separator: ", ")
+      let o = orders.map({$0.summary(for: self)}).joined(separator: ", ")
       return "\(ticker): \(bitcoinValue.summary) BTC \(o)"
   }
 
@@ -53,6 +53,11 @@ public struct Order: CustomStringConvertible {
   public var description: String {
       return "\(type) \(amount.summary) for \(proceeds.summary) BTC"
   }
+
+  func summary(for holding: Holding) -> String {
+      let ratio = amount / holding.amount
+      return "\(type) \(ratio.roundedPercent) for \(proceeds.summary) BTC"
+  }
 }
 
 public struct Portfolio: CustomStringConvertible {
@@ -63,7 +68,7 @@ public struct Portfolio: CustomStringConvertible {
           return sum + holding.bitcoinValue
       })
   }
-  
+
   public init(holdings: [Holding], btcPrice: Double?) {
       self.holdings = holdings
       self.btcPrice = btcPrice
