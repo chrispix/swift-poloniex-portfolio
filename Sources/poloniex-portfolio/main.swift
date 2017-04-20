@@ -1,6 +1,7 @@
 
 import Foundation
 import crypto
+import poloniex
 
 func showAlert(message: String) {
     let task = Process()

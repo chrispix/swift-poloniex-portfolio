@@ -24,4 +24,4 @@ The executable also uses your [Poloniex API keys](https://poloniex.com/apiKeys) 
 
 ## Running
 
-`.build/debug/poloniex <path to keys file>`
+`.build/debug/poloniex-portfolio <path to keys file>`

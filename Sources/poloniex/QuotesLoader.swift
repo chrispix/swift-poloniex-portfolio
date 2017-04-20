@@ -1,8 +1,8 @@
 
 import Foundation
 
-struct QuotesLoader {
-  static func loadBTCPrice() -> Double? {
+public struct QuotesLoader {
+  public static func loadBTCPrice() -> Double? {
     let session = URLSession(configuration: URLSessionConfiguration.default)
     let url = URL(string: "https://poloniex.com/public?command=returnTicker")!
     let request = URLRequest(url: url)
@@ -30,9 +30,9 @@ struct QuotesLoader {
         }
 
         do {
-            let dict: [String: AnyObject] = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as! [String: AnyObject]
-            guard let bitcoinToUSD = dict["USDT_BTC"] as? [String: AnyObject],
-                let bitcoinPrice = JSONHelper.double(fromJsonObject: bitcoinToUSD["last"]) else { return }
+            let dict: [AnyHashable: Any?] = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as! [AnyHashable: Any?]
+            guard let bitcoinToUSD = dict["USDT_BTC"] as? [AnyHashable: Any?],
+                let bitcoinPrice = JSONHelper.double(fromJsonObject: bitcoinToUSD["last"] as? String) else { return }
             btcPrice = bitcoinPrice
         } catch {
             print("couldn't decode JSON")
