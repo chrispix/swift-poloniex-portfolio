@@ -30,9 +30,9 @@ public struct QuotesLoader {
         }
 
         do {
-            let dict: [String: AnyObject] = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as! [String: AnyObject]
-            guard let bitcoinToUSD = dict["USDT_BTC"] as? [String: AnyObject],
-                let bitcoinPrice = JSONHelper.double(fromJsonObject: bitcoinToUSD["last"]) else { return }
+            let dict: [AnyHashable: Any?] = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as! [AnyHashable: Any?]
+            guard let bitcoinToUSD = dict["USDT_BTC"] as? [AnyHashable: Any?],
+                let bitcoinPrice = JSONHelper.double(fromJsonObject: bitcoinToUSD["last"] as? String) else { return }
             btcPrice = bitcoinPrice
         } catch {
             print("couldn't decode JSON")

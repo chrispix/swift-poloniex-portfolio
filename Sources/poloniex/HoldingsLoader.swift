@@ -31,9 +31,9 @@ public struct HoldingsLoader {
         }
 
         do {
-            let dict: [String: AnyObject] = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as! [String: AnyObject]
+            let dict: [AnyHashable: Any?] = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as! [AnyHashable: Any?]
             for (key, value) in dict {
-                guard let value = value as? [String: AnyObject],
+                guard let key = key as? String, let value = value as? [AnyHashable: Any?],
                 let amount = value["available"] as? String,
                 let available = Double(amount),
                 let bitcoinValue = value["btcValue"] as? String,

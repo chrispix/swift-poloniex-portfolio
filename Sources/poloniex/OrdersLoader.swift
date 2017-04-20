@@ -31,15 +31,16 @@ public struct OrdersLoader {
         }
 
         do {
-            let dict: [String: AnyObject] = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as! [String: AnyObject]
+            let dict: [AnyHashable: Any?] = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as! [AnyHashable: Any?]
             for (market, orders) in dict {
-                guard let orders = orders as? [[String: AnyObject]],
-                orders.count > 0 else { continue }
+                guard let orders = orders as? [[AnyHashable: Any?]],
+                    let market = market as? String,
+                    orders.count > 0 else { continue }
                 for order in orders {
                     guard let typeString = order["type"] as? String,
                         let type = BuySell(rawValue: typeString),
-                        let amount = JSONHelper.double(fromJsonObject: order["amount"]),
-                        let price = JSONHelper.double(fromJsonObject: order["rate"]) else { continue }
+                        let amount = JSONHelper.double(fromJsonObject: order["amount"] as? String),
+                        let price = JSONHelper.double(fromJsonObject: order["rate"] as? String) else { continue }
                     let thisOrder = Order(price: price, amount: amount, type: type)
                     holdings = addOrder(thisOrder, market: market, to: holdings)
                 }

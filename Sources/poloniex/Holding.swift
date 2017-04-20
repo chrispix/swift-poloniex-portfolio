@@ -82,10 +82,11 @@ public struct Portfolio: CustomStringConvertible {
   }
 
   public var description: String {
-      let sorted = holdings.sorted(by: { $0.ticker < $1.ticker })
-      let all: [String] = sorted.map({$0.description})
-      let price = btcPrice != nil ? "BTC price: \(btcPrice!.dollars)\n" : ""
-      return "\(price)\(all.joined(separator: "\n"))\n\(summary)"
+    let sorted = holdings.sorted(by: { $0.ticker < $1.ticker })
+    let all: [String] = sorted.map({$0.description})
+    let price = btcPrice != nil ? "BTC price: \(btcPrice!.dollars)\n" : ""
+    let 💰 = btcPrice != nil ? (btcPrice! * total()).dollars : ""
+    return "\(price)\(all.joined(separator: "\n"))\nTotal: \(total().summary) BTC \(💰)"
   }
 }
 /*
