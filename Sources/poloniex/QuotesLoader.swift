@@ -4,7 +4,7 @@ import Foundation
 public struct QuotesLoader {
   public static func loadBTCPrice() -> Double? {
     let session = URLSession(configuration: URLSessionConfiguration.default)
-    let url = URL(string: "https://poloniex.com/public?command=returnTicker")!
+    let url = URL(string: "http://api.coindesk.com/v1/bpi/currentprice.json")!
     let request = URLRequest(url: url)
     var finished = false
 
@@ -31,8 +31,9 @@ public struct QuotesLoader {
 
         do {
             let dict: [AnyHashable: Any?] = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as! [AnyHashable: Any?]
-            guard let bitcoinToUSD = dict["USDT_BTC"] as? [AnyHashable: Any?],
-                let bitcoinPrice = JSONHelper.double(fromJsonObject: bitcoinToUSD["last"] as? String) else { return }
+            guard let bpi = dict["bpi"] as? [AnyHashable: Any?],
+                let bitcoinToUSD = bpi["USD"] as? [AnyHashable: Any?],
+                let bitcoinPrice = bitcoinToUSD["rate_float"] as? Double else { return }
             btcPrice = bitcoinPrice
         } catch {
             print("couldn't decode JSON")

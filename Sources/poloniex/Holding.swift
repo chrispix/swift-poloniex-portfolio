@@ -68,6 +68,92 @@ public struct Order: CustomStringConvertible {
     }
 }
 
+public struct ExecutedOrder: CustomStringConvertible, Equatable {
+    let price: Double
+    let amount: Double
+    let type: BuySell
+    let fee: Double
+    let total: Double
+    let date: Date
+    var proceeds: Double {
+        return total - fee
+    }
+
+    public var description: String {
+        return "\(type) \(amount) for \(proceeds) BTC"
+    }
+}
+
+public func ==(lhs: ExecutedOrder, rhs: ExecutedOrder) -> Bool {
+    return lhs.price == rhs.price &&
+        lhs.amount == rhs.amount &&
+        lhs.type == rhs.type &&
+        lhs.fee == rhs.fee &&
+        lhs.date == rhs.date &&
+        lhs.total == rhs.total
+}
+
+/* TODO: Assumes orders are newest to oldest. Sort by date to be sure. */
+public extension Array where Element == ExecutedOrder {
+    var mostRecentFirst: [ExecutedOrder] {
+        return sorted(by: {
+            return $0.date > $1.date
+        })
+    }
+
+    var purchases: [ExecutedOrder] {
+        return filter({ order in
+            order.type == .buy
+        })
+    }
+
+    var sales: [ExecutedOrder] {
+        return filter({ order in
+            order.type == .sell
+        })
+    }
+
+    var sold: Double {
+        return sales.reduce(0.0) { (previous, order) -> Double in
+            return previous + order.amount
+        }
+    }
+
+    var salesProceeds: Double {
+        return sales.reduce(0.0) { (previous, order) -> Double in
+            return previous + order.proceeds
+        }
+    }
+
+    func costBasis(for holding: Holding) -> Double {
+        var unaccountedShares = holding.amount
+        var cost: Double = 0
+        // fifo
+        for purchase in purchases where unaccountedShares > 0 {
+            let shares = Swift.min(unaccountedShares, purchase.amount)
+            cost += (shares * purchase.price)
+            unaccountedShares -= shares
+        }
+        return cost
+    }
+
+    var realizedGains: Double {
+        let realized: Double = {
+            var unaccountedShares = sold
+            var cost: Double = 0
+            // fifo
+            for purchase in purchases.reversed() where unaccountedShares > 0 {
+                let shares = Swift.min(unaccountedShares, purchase.amount)
+                cost += (shares * purchase.price)
+                unaccountedShares -= shares
+            }
+            return salesProceeds - cost
+        }()
+
+        return realized
+    }
+}
+
 public struct Portfolio: CustomStringConvertible {
     let holdings: [Holding]
     let btcPrice: Double?
