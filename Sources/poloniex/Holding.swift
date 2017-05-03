@@ -91,7 +91,7 @@ public struct ExecutedOrder: CustomStringConvertible, Equatable {
     }
 
     public var description: String {
-        return "\(type) \(amount) for \(proceeds) BTC"
+        return "\(type) \(amount) on \(date)"
     }
 }
 
