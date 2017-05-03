@@ -10,6 +10,10 @@ extension Double {
         return String(format: "%.2f", self)
     }
 
+    func precision(digits: Int) -> String {
+        return String(format: "%.\(digits)f", self)
+    }
+
     var rounded: String {
         return String(format: "%.0f", self)
     }
