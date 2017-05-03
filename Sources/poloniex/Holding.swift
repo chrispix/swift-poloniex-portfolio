@@ -155,8 +155,19 @@ public extension Array where Element == ExecutedOrder {
         return cost
     }
 
-    var realizedGains: Double {
-        let realized: Double = {
+    struct RealizedGains {
+        let cost: Double
+        let proceeds: Double
+        var gain: Double {
+            return proceeds - cost
+        }
+        var percentGain: Double {
+            return gain / cost
+        }
+    }
+
+    var realizedGains: RealizedGains {
+        let realized: RealizedGains = {
             var unaccountedShares = sold
             var cost: Double = 0
             // fifo
@@ -166,7 +177,7 @@ public extension Array where Element == ExecutedOrder {
                 cost += (shares * adjustedSharePrice)
                 unaccountedShares -= shares
             }
-            return salesProceeds - cost
+            return RealizedGains(cost: cost, proceeds: salesProceeds)
         }()
 
         return realized

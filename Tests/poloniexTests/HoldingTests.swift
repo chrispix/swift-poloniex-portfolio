@@ -30,7 +30,7 @@ class HoldingTests: XCTestCase {
 		XCTAssertEqual(orders.sales, [s2, s1], "Incorrect sales")
 		XCTAssertEqual(orders.sold, 1.5, "Incorrect amount sold")
 		XCTAssertEqual(orders.salesProceeds, 2.5, "Incorrect sales proceeds")
-		XCTAssertEqual(orders.realizedGains, 1.7, "Incorrect realized gains--cost 0.3 + 0.5, sold for 2.5")
+		XCTAssertEqual(orders.realizedGains.gain, 1.7, "Incorrect realized gains--cost 0.3 + 0.5, sold for 2.5")
 
 		let holding = Holding(ticker: "FOO", bitcoinValue: 20, availableAmount: 1, onOrders: 0.5)
 
@@ -60,7 +60,10 @@ class HoldingTests: XCTestCase {
 
 		let orders = [p1, p2, s1].mostRecentFirst
 
-		XCTAssertEqualWithAccuracy(orders.realizedGains, -0.0106589505, accuracy: 0.0000000001, "Incorrect realized gains--cost 0.02705 + 0.0110677005 (0.0381177005), sold for 0.02745875")
+		XCTAssertEqualWithAccuracy(orders.realizedGains.cost, 0.0381177005, accuracy: 0.0000000001, "Incorrect cost")
+		XCTAssertEqualWithAccuracy(orders.realizedGains.proceeds, 0.02745875, accuracy: 0.00000001, "Incorrect proceeds")
+		XCTAssertEqualWithAccuracy(orders.realizedGains.gain, -0.0106589505, accuracy: 0.0000000001, "Incorrect realized gains -- cost 0.0381177005, sold for 0.02745875")
+		XCTAssertEqualWithAccuracy(orders.realizedGains.percentGain, -0.2796, accuracy: 0.0001, "Incorrect realized gain percent")
 	}
 
 }
