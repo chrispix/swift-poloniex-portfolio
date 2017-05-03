@@ -36,4 +36,31 @@ class HoldingTests: XCTestCase {
 
 		XCTAssertEqual(orders.costBasis(for: holding), 0.7, "Incorrect cost basis--cost 0.5 + 0.2")
 	}
+
+	func testFee() {
+		let p1 = ExecutedOrder(price: 0.000541, amount: 50, type: .buy, fee: 0.0015, total: 0.02705, date: dateParser.date(from: "2016-04-01 08:08:40")!)
+		let s1 = ExecutedOrder(price: 0.000275, amount: 100, type: .sell, fee: 0.0015, total: 0.02745875, date: dateParser.date(from: "2016-04-04 08:08:40")!)
+
+		XCTAssertEqualWithAccuracy(p1.proceeds.btc, -0.02705, accuracy: 0.00001, "Incorrect proceeds on purchase")
+		XCTAssertEqualWithAccuracy(p1.proceeds.altcoin, 49.925, accuracy: 0.001, "Incorrect proceeds on purchase")
+		XCTAssertEqualWithAccuracy(s1.proceeds.btc, 0.02745875, accuracy: 0.00000001, "Incorrect proceeds on sale")
+		XCTAssertEqual(s1.proceeds.altcoin, -100, "Incorrect proceeds on sale")
+	}
+
+    /*
+	first purchase yields 49.925 for 0.02705 BTC
+	second share price is 0.0002210225 (0.02314330 / (104.97259704 * (1 - .0025)))
+	second purchase yields 50.075 for 0.0110677005 BTC
+	Total cost: 0.0381177005 BTC
+	*/
+	func testRealizedGains() {
+		let p1 = ExecutedOrder(price: 0.000541, amount: 50, type: .buy, fee: 0.0015, total: 0.02705, date: dateParser.date(from: "2016-04-01 08:08:40")!)
+		let p2 = ExecutedOrder(price: 0.00022047, amount: 104.97259704, type: .buy, fee: 0.0025, total: 0.02314330, date: dateParser.date(from: "2016-04-02 08:08:40")!)
+		let s1 = ExecutedOrder(price: 0.000275, amount: 100, type: .sell, fee: 0.0015, total: 0.02745875, date: dateParser.date(from: "2016-04-04 08:08:40")!)
+
+		let orders = [p1, p2, s1].mostRecentFirst
+
+		XCTAssertEqualWithAccuracy(orders.realizedGains, -0.0106589505, accuracy: 0.0000000001, "Incorrect realized gains--cost 0.02705 + 0.0110677005 (0.0381177005), sold for 0.02745875")
+	}
+
 }

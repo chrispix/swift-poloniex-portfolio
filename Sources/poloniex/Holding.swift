@@ -68,15 +68,26 @@ public struct Order: CustomStringConvertible {
     }
 }
 
+public struct Proceeds {
+    let btc: Double
+    let altcoin: Double
+}
+
 public struct ExecutedOrder: CustomStringConvertible, Equatable {
     let price: Double
     let amount: Double
     let type: BuySell
-    let fee: Double
+    let fee: Double // percentage
     let total: Double
     let date: Date
-    var proceeds: Double {
-        return total - fee
+    var proceeds: Proceeds {
+        switch type {
+        case .buy:
+            return Proceeds(btc: -total, altcoin: amount * (1.0 - fee))
+        case .sell:
+            // fee is already taken out of total on sales
+            return Proceeds(btc: total, altcoin: -amount)
+        }
     }
 
     public var description: String {
@@ -101,6 +112,12 @@ public extension Array where Element == ExecutedOrder {
         })
     }
 
+    var oldestFirst: [ExecutedOrder] {
+        return sorted(by: {
+            return $0.date < $1.date
+        })
+    }
+
     var purchases: [ExecutedOrder] {
         return filter({ order in
             order.type == .buy
@@ -121,7 +138,7 @@ public extension Array where Element == ExecutedOrder {
 
     var salesProceeds: Double {
         return sales.reduce(0.0) { (previous, order) -> Double in
-            return previous + order.proceeds
+            return previous + order.proceeds.btc
         }
     }
 
@@ -130,8 +147,9 @@ public extension Array where Element == ExecutedOrder {
         var cost: Double = 0
         // fifo
         for purchase in purchases where unaccountedShares > 0 {
-            let shares = Swift.min(unaccountedShares, purchase.amount)
-            cost += (shares * purchase.price)
+            let shares = Swift.min(unaccountedShares, purchase.proceeds.altcoin)
+            let adjustedSharePrice = Swift.abs(purchase.proceeds.btc / purchase.amount)
+            cost += (shares * adjustedSharePrice)
             unaccountedShares -= shares
         }
         return cost
@@ -142,9 +160,10 @@ public extension Array where Element == ExecutedOrder {
             var unaccountedShares = sold
             var cost: Double = 0
             // fifo
-            for purchase in purchases.reversed() where unaccountedShares > 0 {
-                let shares = Swift.min(unaccountedShares, purchase.amount)
-                cost += (shares * purchase.price)
+            for purchase in purchases.oldestFirst where unaccountedShares > 0 {
+                let shares = Swift.min(unaccountedShares, purchase.proceeds.altcoin)
+                let adjustedSharePrice = Swift.abs(purchase.proceeds.btc / purchase.proceeds.altcoin)
+                cost += (shares * adjustedSharePrice)
                 unaccountedShares -= shares
             }
             return salesProceeds - cost
