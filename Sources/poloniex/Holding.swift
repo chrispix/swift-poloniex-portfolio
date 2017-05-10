@@ -7,21 +7,36 @@ public struct Holding: CustomStringConvertible {
     let availableAmount: Double
     let onOrders: Double
     public var orders = [Order]()
+
     var bitcoinMarketKey: String {
         return "BTC_\(ticker)"
     }
+
     public var isBitcoin: Bool {
         return ticker == "BTC"
     }
+
     var amount: Double {
         return availableAmount + onOrders
     }
+
     public var description: String {
         let o = orders.map({$0.summary(for: self)}).joined(separator: ", ")
         return "\(ticker): \(bitcoinValue.summary) BTC \(o)"
     }
+
     var bitcoinPrice: Double {
         return bitcoinValue / amount
+    }
+
+    var likeliestOrderToFill: Order? {
+        guard let first = orders.first else { return nil }
+
+        return orders.reduce(first, { (previous, order) -> Order in
+            let difference = order.likelihoodToFill(currentPrice: bitcoinPrice)
+            let previousDifference = previous.likelihoodToFill(currentPrice: bitcoinPrice)
+            return difference < previousDifference ? order : previous
+        })
     }
 
     static func ticker(fromBitcoinMarketKey key: String) -> String? {
@@ -64,6 +79,11 @@ public struct Order: CustomStringConvertible {
     func summary(for holding: Holding) -> String {
         let ratio = amount / holding.amount
         return "\(type) \(ratio.roundedPercent) for \(proceeds.summary) BTC"
+    }
+
+    /* percentage difference between order price and current price */
+    func likelihoodToFill(currentPrice: Double) -> Double {
+        return Swift.abs((price - currentPrice) / currentPrice)
     }
 }
 
