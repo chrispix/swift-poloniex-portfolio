@@ -4,7 +4,7 @@ import Foundation
 public struct OrdersLoader {
   public static func loadOrders(_ holdings: [Holding], keys: APIKeys) -> [Holding] {
     let session = URLSession(configuration: URLSessionConfiguration.default)
-    let poloniexRequest = PoloniexRequest(params: ["command": "returnOpenOrders", "currencyPair": "all"], keys: keys)
+    let poloniexRequest = PoloniexRequest(command: "/market/getopenorders", params: [:], keys: keys)
     let request = poloniexRequest.urlRequest
 
     var finished = false
@@ -32,18 +32,16 @@ public struct OrdersLoader {
 
         do {
             let dict: [AnyHashable: Any?] = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as! [AnyHashable: Any?]
-            for (market, orders) in dict {
-                guard let orders = orders as? [[AnyHashable: Any?]],
-                    let market = market as? String,
-                    orders.count > 0 else { continue }
-                for order in orders {
-                    guard let typeString = order["type"] as? String,
-                        let type = BuySell(rawValue: typeString),
-                        let amount = JSONHelper.double(fromJsonObject: order["amount"] as? String),
-                        let price = JSONHelper.double(fromJsonObject: order["rate"] as? String) else { continue }
-                    let thisOrder = Order(price: price, amount: amount, type: type)
-                    holdings = addOrder(thisOrder, market: market, to: holdings)
-                }
+            let orders = dict["result"] as! [[AnyHashable: Any]]
+            for order in orders {
+                print(order)
+                guard let typeString = order["OrderType"] as? String,
+                    let market = order["Exchange"] as? String,
+                    let type = BuySell(rawValue: typeString),
+                    let amount = order["Quantity"] as? Double,
+                    let price = order["PricePerUnit"] as? Double else { continue }
+                let thisOrder = Order(price: price, amount: amount, type: type)
+                holdings = addOrder(thisOrder, market: market, to: holdings)
             }
         } catch {
             print("couldn't decode JSON")
@@ -64,7 +62,7 @@ public struct OrdersLoader {
   private static func addOrder(_ order: Order, market: String, to holdings: [Holding]) -> [Holding] {
       if holdings.filter({ $0.bitcoinMarketKey == market }).isEmpty, let ticker = Holding.ticker(fromBitcoinMarketKey: market) {
           // we have no holding for this currency
-          var holding = Holding(ticker: ticker, bitcoinValue: 0, availableAmount: 0, onOrders: 0)
+          var holding = Holding(ticker: ticker, availableAmount: 0, onOrders: 0)
           holding.addOrder(order)
           var holdings = holdings
           holdings.append(holding)

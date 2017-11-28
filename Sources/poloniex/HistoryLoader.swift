@@ -13,7 +13,7 @@ class HistoryLoader {
 
     static func loadOrders(_ holding: Holding, keys: APIKeys) -> [ExecutedOrder] {
         let session = URLSession(configuration: URLSessionConfiguration.default)
-        let poloniexRequest = PoloniexRequest(params: ["command": "returnTradeHistory", "currencyPair": holding.bitcoinMarketKey, "start": "0", "end": "\(Date().timeIntervalSince1970)"], keys: keys)
+        let poloniexRequest = PoloniexRequest(command: "/account/getorderhistory", params: ["market": holding.bitcoinMarketKey], keys: keys)
         let request = poloniexRequest.urlRequest
 
         var finished = false

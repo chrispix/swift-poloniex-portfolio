@@ -4,7 +4,7 @@ import Foundation
 public struct HoldingsLoader {
   public static func loadHoldings(_ keys: APIKeys) -> [Holding] {
     let session = URLSession(configuration: URLSessionConfiguration.default)
-    let poloniexRequest = PoloniexRequest(params: ["command": "returnCompleteBalances"], keys: keys)
+    let poloniexRequest = PoloniexRequest(command: "/account/getbalances", params: [:], keys: keys)
     let request = poloniexRequest.urlRequest
 
     var finished = false
@@ -31,19 +31,16 @@ public struct HoldingsLoader {
         }
 
         do {
-            let dict: [AnyHashable: Any?] = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as! [AnyHashable: Any?]
-            for (key, value) in dict {
-                guard let key = key as? String, let value = value as? [AnyHashable: Any?],
-                let amount = value["available"] as? String,
-                let available = Double(amount),
-                let bitcoinValue = value["btcValue"] as? String,
-                let bits = Double(bitcoinValue), bits > 0 else { continue }
-                let onOrders: Double = {
-                    guard let out = value["onOrders"] as? String else { return 0 }
-                    return Double(out) ?? 0
-                }()
-
-                let holding = Holding(ticker: key, bitcoinValue: bits, availableAmount: available, onOrders: onOrders)
+            let dict: [AnyHashable: Any] = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as! [AnyHashable: Any]
+            let coins = dict["result"] as! [[AnyHashable: Any]]
+            for coin in coins {
+                guard
+                    let key = coin["Currency"] as? String,
+                    let available = coin["Available"] as? Double,
+//                    let pending = coin["Pending"] as? Double,
+                    let balance = coin["Balance"] as? Double
+                    else { continue }
+                let holding = Holding(ticker: key, availableAmount: available, onOrders: balance - available)
                 holdings.append(holding)
             }
         } catch {

@@ -1,39 +1,45 @@
 
 import Foundation
-import crypto
+//import crypto
 
 struct PoloniexRequest {
-  let body: String
-  let hash: String
-  let keys: APIKeys
-  var bodyData: Data {
-    return body.data(using: .utf8)!
-  }
-  var urlRequest: URLRequest {
-      var request = URLRequest(url: tradingURL)
-      request.setValue(keys.key, forHTTPHeaderField: "Key")
-      request.setValue(hash, forHTTPHeaderField: "Sign")
-      request.httpBody = bodyData
-      request.httpMethod = "POST"
-      return request
-  }
-  let tradingURL = URL(string: "https://poloniex.com/tradingApi")!
-
-  init(params: [String: String], keys: APIKeys) {
-    self.keys = keys
-
-    let nonce = Int64(Date().timeIntervalSince1970 * 1000)
-    var queryItems = [URLQueryItem]()
-    for (key, value) in params {
-      queryItems.append(URLQueryItem(name: key, value: value))
+    let body: String
+    let hash: String
+    let keys: APIKeys
+    let url: URL
+    private let command: String
+    var bodyData: Data {
+        return body.data(using: .utf8)!
     }
-    queryItems.append(URLQueryItem(name: "nonce", value: "\(nonce)"))
-    var components = URLComponents()
-    components.queryItems = queryItems
-    let body = components.query!
-    let hash = body.hmac(algorithm: HMACAlgorithm.SHA512, key: keys.secret)
+    var urlRequest: URLRequest {
+        var request = URLRequest(url: url)
+        //      request.setValue(keys.key, forHTTPHeaderField: "Key")
+        request.setValue(hash, forHTTPHeaderField: "apisign")
+        request.httpBody = bodyData
+        request.httpMethod = "POST"
+        return request
+    }
+    let baseURL = "https://bittrex.com/api/v1.1"
 
-    self.body = body
-    self.hash = hash
-  }
+    init(command: String, params: [String: String], keys: APIKeys) {
+        self.keys = keys
+        self.command = command
+        let fullURL = URL(string: baseURL + command)!
+
+        let nonce = Int64(Date().timeIntervalSince1970 * 1000)
+        var queryItems = [URLQueryItem]()
+        for (key, value) in params {
+            queryItems.append(URLQueryItem(name: key, value: value))
+        }
+        queryItems.append(URLQueryItem(name: "nonce", value: "\(nonce)"))
+        queryItems.append(URLQueryItem(name: "apikey", value: "\(keys.key)"))
+        var components = URLComponents(url: fullURL, resolvingAgainstBaseURL: false)!
+        components.queryItems = queryItems
+        self.url = components.url!
+        let hash = url.absoluteString.hmac(algorithm: HMACAlgorithm.SHA512, key: keys.secret)
+
+        self.body = components.query!
+        self.hash = hash
+    }
 }
+

@@ -3,13 +3,12 @@ import Foundation
 
 public struct Holding: CustomStringConvertible {
     public let ticker: String
-    let bitcoinValue: Double
     let availableAmount: Double
     let onOrders: Double
     public var orders = [Order]()
 
     var bitcoinMarketKey: String {
-        return "BTC_\(ticker)"
+        return "BTC-\(ticker)"
     }
 
     public var isBitcoin: Bool {
@@ -25,9 +24,8 @@ public struct Holding: CustomStringConvertible {
         return "\(ticker): \(bitcoinValue.summary) BTC \(o)"
     }
 
-    var bitcoinPrice: Double {
-        return bitcoinValue / amount
-    }
+    var bitcoinPrice: Double = 0
+    var bitcoinValue: Double { return amount * bitcoinPrice } 
 
     var likeliestOrderToFill: Order? {
         guard let first = orders.first else { return nil }
@@ -40,13 +38,12 @@ public struct Holding: CustomStringConvertible {
     }
 
     static func ticker(fromBitcoinMarketKey key: String) -> String? {
-        guard key.hasPrefix("BTC_") else { return nil }
-        return key.replacingOccurrences(of: "BTC_", with: "")
+        guard key.hasPrefix("BTC-") else { return nil }
+        return key.replacingOccurrences(of: "BTC-", with: "")
     }
 
-    init(ticker: String, bitcoinValue: Double, availableAmount: Double, onOrders: Double) {
+    init(ticker: String, availableAmount: Double, onOrders: Double) {
         self.ticker = ticker
-        self.bitcoinValue = bitcoinValue
         self.availableAmount = availableAmount
         self.onOrders = onOrders
     }
@@ -61,8 +58,8 @@ public struct Holding: CustomStringConvertible {
 }
 
 enum BuySell: String {
-    case buy
-    case sell
+    case buy = "LIMIT_BUY"
+    case sell = "LIMIT_SELL"
 }
 
 public struct Order: CustomStringConvertible {
