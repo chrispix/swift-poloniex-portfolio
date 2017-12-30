@@ -23,6 +23,7 @@ extension Double {
     }
 
     var threeSignificant: String {
+        guard self > 0 else { return "0" }
         var temp = self
         while temp <= 100 {
             temp *= 10

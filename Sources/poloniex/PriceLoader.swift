@@ -4,7 +4,7 @@ import Foundation
 public struct PriceLoader {
     public static func loadPrices(_ holdings: [Holding], keys: APIKeys) -> [Holding] {
         let session = URLSession(configuration: URLSessionConfiguration.default)
-        let poloniexRequest = PoloniexRequest(command: "/public/getmarketsummaries", params: [:], keys: keys)
+        let poloniexRequest = PoloniexRequest(command: "/pub/Markets/GetMarketSummaries", params: [:], keys: keys)
         let request = poloniexRequest.urlRequest
 
         var finished = false
@@ -37,7 +37,7 @@ public struct PriceLoader {
                 markets.forEach({ if let market = $0["MarketName"] as? String, let price = $0["Last"] as? Double { prices[market] = price }})
                 for var holding in holdings {
                     guard let price = prices[holding.bitcoinMarketKey] else { continue }
-                    holding.bitcoinPrice = price
+//                    holding.bitcoinPrice = price
                     populatedHoldings.append(holding)
                 }
             } catch {

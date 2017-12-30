@@ -19,14 +19,15 @@ struct PoloniexRequest {
         request.httpMethod = "POST"
         return request
     }
-    let baseURL = "https://bittrex.com/api/v1.1"
+    let baseURL = "https://bittrex.com/api/v2.0"
 
     init(command: String, params: [String: String], keys: APIKeys) {
         self.keys = keys
         self.command = command
         let fullURL = URL(string: baseURL + command)!
 
-        let nonce = Int64(Date().timeIntervalSince1970 * 1000)
+        let nonce = Date().timeIntervalSince1970 * 1000
+//        let nonce = Int64(Date().timeIntervalSince1970 * 1000)
         var queryItems = [URLQueryItem]()
         for (key, value) in params {
             queryItems.append(URLQueryItem(name: key, value: value))

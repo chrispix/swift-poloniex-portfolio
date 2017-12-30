@@ -5,6 +5,7 @@ public struct Holding: CustomStringConvertible {
     public let ticker: String
     let availableAmount: Double
     let onOrders: Double
+    let bitcoinPrice: Double
     public var orders = [Order]()
 
     var bitcoinMarketKey: String {
@@ -24,8 +25,7 @@ public struct Holding: CustomStringConvertible {
         return "\(ticker): \(bitcoinValue.summary) BTC \(o)"
     }
 
-    var bitcoinPrice: Double = 0
-    var bitcoinValue: Double { return amount * bitcoinPrice } 
+    var bitcoinValue: Double { return amount * bitcoinPrice }
 
     var likeliestOrderToFill: Order? {
         guard let first = orders.first else { return nil }
@@ -42,10 +42,11 @@ public struct Holding: CustomStringConvertible {
         return key.replacingOccurrences(of: "BTC-", with: "")
     }
 
-    init(ticker: String, availableAmount: Double, onOrders: Double) {
+    init(ticker: String, bitcoinPrice: Double, availableAmount: Double, onOrders: Double) {
         self.ticker = ticker
         self.availableAmount = availableAmount
         self.onOrders = onOrders
+        self.bitcoinPrice = bitcoinPrice
     }
 
     mutating func addOrder(_ order: Order) {

@@ -1,10 +1,12 @@
 
 import Foundation
 
+// endpoint list: https://github.com/ericsomdahl/python-bittrex/issues/35#issuecomment-326191279
+
 public struct OrdersLoader {
   public static func loadOrders(_ holdings: [Holding], keys: APIKeys) -> [Holding] {
     let session = URLSession(configuration: URLSessionConfiguration.default)
-    let poloniexRequest = PoloniexRequest(command: "/market/getopenorders", params: [:], keys: keys)
+    let poloniexRequest = PoloniexRequest(command: "/key/orders/getopenorders", params: [:], keys: keys)
     let request = poloniexRequest.urlRequest
 
     var finished = false
@@ -39,8 +41,9 @@ public struct OrdersLoader {
                     let market = order["Exchange"] as? String,
                     let type = BuySell(rawValue: typeString),
                     let amount = order["Quantity"] as? Double,
-                    let price = order["PricePerUnit"] as? Double else { continue }
-                let thisOrder = Order(price: price, amount: amount, type: type)
+                    amount > 0
+                else { continue }
+                let thisOrder = Order(price: 0, amount: amount, type: type)
                 holdings = addOrder(thisOrder, market: market, to: holdings)
             }
         } catch {
@@ -48,6 +51,8 @@ public struct OrdersLoader {
             finished = true
             return
         }
+
+        holdings = holdings.filter({ $0.amount > 0 || $0.orders.count > 0 })
 
         finished = true
     })
@@ -62,7 +67,7 @@ public struct OrdersLoader {
   private static func addOrder(_ order: Order, market: String, to holdings: [Holding]) -> [Holding] {
       if holdings.filter({ $0.bitcoinMarketKey == market }).isEmpty, let ticker = Holding.ticker(fromBitcoinMarketKey: market) {
           // we have no holding for this currency
-          var holding = Holding(ticker: ticker, availableAmount: 0, onOrders: 0)
+        var holding = Holding(ticker: ticker, bitcoinPrice: 0, availableAmount: 0, onOrders: 0)
           holding.addOrder(order)
           var holdings = holdings
           holdings.append(holding)
