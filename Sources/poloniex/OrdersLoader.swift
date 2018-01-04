@@ -36,7 +36,6 @@ public struct OrdersLoader {
             let dict: [AnyHashable: Any?] = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as! [AnyHashable: Any?]
             let orders = dict["result"] as! [[AnyHashable: Any]]
             for order in orders {
-                print(order)
                 guard let typeString = order["OrderType"] as? String,
                     let market = order["Exchange"] as? String,
                     let type = BuySell(rawValue: typeString),

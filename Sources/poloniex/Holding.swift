@@ -1,5 +1,19 @@
 
 import Foundation
+import UIKit
+
+struct PriceRange {
+    let low: Double
+    let high: Double
+    let average: Double
+
+    init(prices: [Double]) {
+        low = prices.min()!
+        high = prices.max()!
+        let total = prices.reduce(0, +)
+        average = total/Double(prices.count)
+    }
+}
 
 public struct Holding: CustomStringConvertible {
     public let ticker: String
@@ -7,6 +21,7 @@ public struct Holding: CustomStringConvertible {
     let onOrders: Double
     let bitcoinPrice: Double
     public var orders = [Order]()
+    var priceRange: PriceRange?
 
     var bitcoinMarketKey: String {
         return "BTC-\(ticker)"
@@ -23,6 +38,19 @@ public struct Holding: CustomStringConvertible {
     public var description: String {
         let o = orders.map({$0.summary(for: self)}).joined(separator: ", ")
         return "\(ticker): \(bitcoinValue.summary) BTC \(o)"
+    }
+
+    // greenest if 50% below average price
+    // reddest if 50% above average price
+    var backgroundColor: UIColor {
+        guard let priceRange = priceRange else { return .clear }
+        var deviationFromAverage = (bitcoinPrice - priceRange.average) / priceRange.average
+        deviationFromAverage = min(deviationFromAverage, 0.5)
+        deviationFromAverage = max(deviationFromAverage, -0.5)
+        deviationFromAverage = deviationFromAverage + 0.5
+        // convert 0-1 to .33 - 0
+        let hue = CGFloat((1.0 - deviationFromAverage) * 0.33)
+        return UIColor(hue: hue, saturation: 0.15, brightness: 1.0, alpha: 1.0)
     }
 
     var bitcoinValue: Double { return amount * bitcoinPrice }
