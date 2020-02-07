@@ -1,6 +1,6 @@
 
 import Foundation
-import crypto
+import Crypto
 import poloniex
 
 func showAlert(message: String) {
@@ -29,12 +29,14 @@ if arguments.count != 2 {
 let path = arguments[1]
 
 if let keys = KeyLoader.loadKeys(path) {
-    let holdings = HoldingsLoader.loadHoldings(keys)
-    let holdingsWithOrders = OrdersLoader.loadOrders(holdings, keys: keys)
-    alertHoldingsWithoutOrders(holdingsWithOrders)
-    let btcPrice = QuotesLoader.loadBTCPrice()
-    let portfolio = Portfolio(holdings: holdingsWithOrders, btcPrice: btcPrice)
-    print(portfolio)
+//  DepositsLoader.load(keys)
+     let holdings = HoldingsLoader.loadHoldings(keys)
+    print(holdings)
+    // let holdingsWithOrders = OrdersLoader.loadOrders(holdings, keys: keys)
+    // alertHoldingsWithoutOrders(holdingsWithOrders)
+    // let btcPrice = QuotesLoader.loadBTCPrice()
+    // let portfolio = Portfolio(holdings: holdingsWithOrders, btcPrice: btcPrice)
+    // print(portfolio)
 } else {
     print("Could not parse keys from \(path)")
 }

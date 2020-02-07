@@ -1,11 +1,16 @@
+// swift-tools-version:5.1
+
 import PackageDescription
 
 let package = Package(
     name: "poloniex-portfolio",
-    targets: [Target(name: "crypto", dependencies:["objc"]),
-              Target(name: "poloniex", dependencies:["crypto"]),
-              Target(name: "poloniex-portfolio", dependencies:["poloniex"])],
+    platforms: [
+        .macOS(.v10_15),
+    ],
     dependencies: [
-        .Package(url: "https://github.com/oarrabi/Guaka.git", majorVersion: 0)
-    ]
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0")
+    ],
+    targets: [
+              .target(name: "poloniex", dependencies:["Crypto"]),
+              .target(name: "poloniex-portfolio", dependencies:["poloniex"])]
 )

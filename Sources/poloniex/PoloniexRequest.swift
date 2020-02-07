@@ -1,46 +1,84 @@
 
 import Foundation
-//import crypto
+import Crypto
 
 struct PoloniexRequest {
-    let body: String
-    let hash: String
-    let keys: APIKeys
-    let url: URL
+    private let hash: String
+    private let timestamp: String
+    private let keys: APIKeys
+    private let url: URL
+    private let method: String = "GET"
+    private let preSignHash: String
     private let command: String
-    var bodyData: Data {
-        return body.data(using: .utf8)!
-    }
+
     var urlRequest: URLRequest {
         var request = URLRequest(url: url)
-        //      request.setValue(keys.key, forHTTPHeaderField: "Key")
-        request.setValue(hash, forHTTPHeaderField: "apisign")
-        request.httpBody = bodyData
-        request.httpMethod = "POST"
+        request.setValue(keys.key, forHTTPHeaderField: "Api-Key")
+        request.setValue(timestamp, forHTTPHeaderField: "Api-Timestamp")
+        request.setValue(hash, forHTTPHeaderField: "Api-Content-Hash")
+        request.setValue(preSignHash, forHTTPHeaderField: "Api-Signature")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        request.httpMethod = method
         return request
     }
-    let baseURL = "https://bittrex.com/api/v2.0"
+    let baseURL = "https://api.bittrex.com/v3"
 
     init(command: String, params: [String: String], keys: APIKeys) {
         self.keys = keys
         self.command = command
+        let now: TimeInterval = Date().timeIntervalSince1970
+        self.timestamp = String(Int64((now * 1000.0).rounded()))
+
         let fullURL = URL(string: baseURL + command)!
+        self.url = fullURL
 
-        let nonce = Date().timeIntervalSince1970 * 1000
-//        let nonce = Int64(Date().timeIntervalSince1970 * 1000)
-        var queryItems = [URLQueryItem]()
-        for (key, value) in params {
-            queryItems.append(URLQueryItem(name: key, value: value))
-        }
-        queryItems.append(URLQueryItem(name: "nonce", value: "\(nonce)"))
-        queryItems.append(URLQueryItem(name: "apikey", value: "\(keys.key)"))
-        var components = URLComponents(url: fullURL, resolvingAgainstBaseURL: false)!
-        components.queryItems = queryItems
-        self.url = components.url!
-        let hash = url.absoluteString.hmac(algorithm: HMACAlgorithm.SHA512, key: keys.secret)
+        let key = SymmetricKey(data: keys.secret.data(using: .utf8)!)
+        let urlData = "".data(using: .utf8)!
+        let hashed = SHA512.hash(data: urlData)
 
-        self.body = components.query!
-        self.hash = hash
+        let theHash = hashed.makeIterator().map({ String(format: "%02hhx", $0) }).joined()
+        self.hash = theHash
+
+        let presign = [timestamp, fullURL.absoluteString, method, theHash].joined()
+        let presignData = presign.data(using: .utf8)!
+        let presignHmac = HMAC<SHA512>.authenticationCode(for: presignData, using: key)
+        let presignHash = presignHmac.makeIterator().map({ String(format: "%02hhx", $0) }).joined()
+        self.preSignHash = presignHash
     }
 }
 
+/*
+https://api.bittrex.com/v3/balances
+▿ url : Optional<URL>
+▿ some : https://api.bittrex.com/v3/balances
+- _url : https://api.bittrex.com/v3/balances
+- cachePolicy : 0
+- timeoutInterval : 60.0
+- mainDocumentURL : nil
+- networkServiceType : __C.NSURLRequestNetworkServiceType
+- allowsCellularAccess : true
+▿ httpMethod : Optional<String>
+- some : "GET"
+▿ allHTTPHeaderFields : Optional<Dictionary<String, String>>
+▿ some : 6 elements
+▿ 0 : 2 elements
+- key : "Api-Key"
+- value : "5f19f64ccbb348ef8000cd52f34ff1c1"
+▿ 1 : 2 elements
+- key : "Api-Content-Hash"
+- value : "214fbdc6e9020a8ad6ffd21b22942399850e0d990b5a411ee4831e3201a8bc0697c1fe8e946d8b6305b8e31aee1344c49a06275507177bb92b70376a0c41a363"
+▿ 2 : 2 elements
+- key : "Api-Timestamp"
+- value : "1580855965987"
+▿ 3 : 2 elements
+- key : "Content-Type"
+- value : "application/json"
+▿ 4 : 2 elements
+- key : "Api-Signature"
+- value : "5bfb0c0e9c3e66c169cdb99ce96926828cdc35bad6d04033387862beb980940fd392de16c3dc768d6f28dc7fbbbc3f9e7c8d72b6e797062bcd829eba4b3004b9"
+- httpBody : nil
+- httpBodyStream : nil
+- httpShouldHandleCookies : true
+- httpShouldUsePipelining : false
+*/

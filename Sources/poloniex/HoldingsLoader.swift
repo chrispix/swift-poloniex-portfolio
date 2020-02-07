@@ -4,7 +4,7 @@ import Foundation
 public struct HoldingsLoader {
   public static func loadHoldings(_ keys: APIKeys) -> [Holding] {
     let session = URLSession(configuration: URLSessionConfiguration.default)
-    let poloniexRequest = PoloniexRequest(command: "/key/balance/getbalances", params: [:], keys: keys)
+    let poloniexRequest = PoloniexRequest(command: "/balances", params: [:], keys: keys)
     let request = poloniexRequest.urlRequest
 
     var finished = false
@@ -31,13 +31,13 @@ public struct HoldingsLoader {
         }
 
         do {
-            let dict: [AnyHashable: Any] = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as! [AnyHashable: Any]
-            let coins = dict["result"] as! [[AnyHashable: Any]]
+            let coins: [[AnyHashable: Any]] = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as! [[AnyHashable: Any]]
             for coin in coins {
-                guard let account = coin["Balance"] as? [AnyHashable: Any],
-                    let ticker = account["Currency"] as? String,
-                    let balance = account["Balance"] as? Double,
-                    let available = account["Available"] as? Double
+                guard let ticker = coin["currencySymbol"] as? String,
+                    let balance = coin["total"] as? String,
+                    let available = coin["available"] as? String,
+                    let bal = Double(balance),
+                    let avail = Double(available)
                     else { continue }
                 let price: Double
                 if ticker == "BTC" {
@@ -47,7 +47,7 @@ public struct HoldingsLoader {
                         let bitcoinPrice = market["Ask"] as? Double else { continue }
                     price = bitcoinPrice
                 }
-                let holding = Holding(ticker: ticker, bitcoinPrice: price, availableAmount: available, onOrders: balance - available)
+                let holding = Holding(ticker: ticker, bitcoinPrice: price, availableAmount: avail, onOrders: bal - avail)
                 holdings.append(holding)
             }
         } catch {
